@@ -1,17 +1,19 @@
 Python-Redmine
 ==============
 
-.. image:: https://badge.fury.io/py/python-redmine.svg
+|PyPI| |Tests| |Coveralls|
+
+.. |PyPI| image:: https://badge.fury.io/py/python-redmine.svg
    :target: https://badge.fury.io/py/python-redmine
 
-.. image:: https://img.shields.io/travis/maxtepkeev/python-redmine/master.svg
-   :target: https://travis-ci.org/maxtepkeev/python-redmine
+.. |Tests| image:: https://img.shields.io/github/actions/workflow/status/maxtepkeev/python-redmine/tests.yml.svg
+   :target: https://github.com/maxtepkeev/python-redmine/actions/workflows/tests.yml
 
-.. image:: https://img.shields.io/coveralls/maxtepkeev/python-redmine/master.svg
-   :target: https://coveralls.io/r/maxtepkeev/python-redmine?branch=master
+.. |Coveralls| image:: https://img.shields.io/coverallsCoverage/github/maxtepkeev/python-redmine?branch=master
+   :target: https://coveralls.io/github/maxtepkeev/python-redmine?branch=master
 
 Python-Redmine is a library for communicating with a `Redmine <http://www.redmine.org>`__
-project management application. Redmine exposes some of it's data via `REST API
+project management application. Redmine exposes some of its data via `REST API
 <http://www.redmine.org/projects/redmine/wiki/Rest_api>`__ for which Python-Redmine provides
 a simple but powerful Pythonic API inspired by a well-known `Django ORM
 <https://docs.djangoproject.com/en/dev/topics/db/queries/>`__:
@@ -54,7 +56,7 @@ Features
 
 * Supports 100% of Redmine API
 * Supports external Redmine plugins API
-* Supports Python 2.7, 3.5 - 3.8, PyPy and PyPy3
+* Supports Python 3.7 - 3.12 and PyPy3
 * Supports different request engines
 * Extendable via custom resources and custom request engines
 * Extensively documented
@@ -76,9 +78,11 @@ The recommended way to install is from Python Package Index (PyPI) with `pip <ht
 Pro Edition
 +++++++++++
 
-License for a Pro Edition can be bought
-`here <https://secure.2checkout.com/order/checkout.php?PRODS=4708754&QTY=1&CART=1&CARD=1&DISABLE_SHORT_FORM_MOBILE=1>`__.
-You will receive an email with all the details regarding Pro Edition installation process.
+License for a Pro Edition can currently only be bought via `TON <https://ton.org>`__ by transferring 25 USDT
+to the following wallet address: :code:`UQBn0FIZM1zM7lmIeCczdk9sIMDrvBfFbbuXsYJPdCaFcmYJ`. After the
+transaction is complete, be sure to send an email to support@python-redmine.com that contains your transaction ID
+and you will receive an email back with all the details regarding Pro Edition installation process. Please give us
+at least 3 to 6 hours to process these emails.
 
 Documentation
 -------------

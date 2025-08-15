@@ -6,7 +6,7 @@ Supported by Redmine starting from version 1.0
 Manager
 -------
 
-All operations on the Issue resource are provided by it's manager. To get access to
+All operations on the Issue resource are provided by its manager. To get access to
 it you have to call ``redmine.issue`` where ``redmine`` is a configured redmine object.
 See the :doc:`../configuration` about how to configure redmine object.
 
@@ -121,7 +121,7 @@ get
    :module: redminelib.managers.ResourceManager
    :noindex:
 
-   Returns single Issue resource from Redmine by it's id.
+   Returns single Issue resource from Redmine by its id.
 
    :param int resource_id: (required). Id of the issue.
    :param list include:
@@ -134,7 +134,8 @@ get
     - relations
     - changesets
     - journals
-    - watchers
+    - watchers (requires Redmine >= 2.3.0)
+    - allowed_statuses (requires Redmine >= 5.0.0)
 
    :return: :ref:`Resource` object
 
@@ -167,7 +168,7 @@ get
 
    * relations
    * time_entries
-   * checklists (requires Pro Edition and `Checklist plugin <https://www.redmineup.com/pages/plugins/checklists>`_)
+   * checklists (requires Pro Edition and `Checklists plugin <https://www.redmineup.com/pages/plugins/checklists>`_)
 
    .. code-block:: python
 
@@ -182,8 +183,8 @@ all
    :module: redminelib.managers.ResourceManager
    :noindex:
 
-   Returns all open Issue resources from Redmine, to return all open and closed issues from
-   Redmine use ``filter()`` method below.
+   Returns all Issue resources (both open and closed) from Redmine, to return issues with specific
+   status from Redmine use ``filter()`` method below.
 
    :param string sort: (optional). Column to sort. Append :desc to invert the order.
    :param int limit: (optional). How much resources to return.
@@ -223,7 +224,7 @@ filter
     a given project and none of its subprojects.
    :type subproject_id: int or string
    :param int tracker_id: (optional). Get issues from the tracker with given id.
-   :param int query_id: (optional). Get issues for the given query id.
+   :param int query_id: (optional). Get issues for the given query id if the project_id is given.
    :param status_id:
     .. raw:: html
 
@@ -235,6 +236,7 @@ filter
     - id - status id
 
    :type status_id: int or string
+   :param int author_id: (optional). Get issues which are authored by the given user id.
    :param int assigned_to_id: (optional). Get issues which are assigned to the given user id.
     To get the issues assigned to the user whose credentials were used to access the API pass ``me``
     as a string.
@@ -264,6 +266,15 @@ filter
    ... )
    >>> issues
    <redminelib.resultsets.ResourceSet object with Issue resources>
+   
+.. code-block:: python
+
+   >>> issues = redmine.issue.filter(
+   ...     project_id='vacation',
+   ...     query_id=326
+   ... )
+   >>> issues
+   <redminelib.resultsets.ResourceSet object with Issue resources>
 
 .. hint::
 
@@ -274,6 +285,21 @@ filter
 
       >>> project = redmine.project.get('vacation')
       >>> project.issues
+      <redminelib.resultsets.ResourceSet object with Issue resources>
+
+   .. versionadded:: 2.5.0
+
+   Apart from ``issues`` relation a User resource object provides ``issues_assigned`` which is an alias
+   to ``issues`` relation and ``issues_authored`` relation which returns Issue objects authored by a user:
+
+   .. code-block:: python
+
+      >>> user = redmine.user.get(9)
+      >>> user.issues
+      <redminelib.resultsets.ResourceSet object with Issue resources>
+      >>> user.issues_assigned
+      <redminelib.resultsets.ResourceSet object with Issue resources>
+      >>> user.issues_authored
       <redminelib.resultsets.ResourceSet object with Issue resources>
 
 Update methods
@@ -414,7 +440,7 @@ delete
    :module: redminelib.managers.ResourceManager
    :noindex:
 
-   Deletes single Issue resource from Redmine by it's id.
+   Deletes single Issue resource from Redmine by its id.
 
    :param int resource_id: (required). Issue id.
    :return: True
@@ -437,6 +463,55 @@ delete
    >>> issue = redmine.issue.get(1)
    >>> issue.delete()
    True
+
+Copying
+-------
+
+.. versionadded:: 2.5.0
+
+.. py:method:: copy(resource_id, project_id=None, link_original=True, include=('subtasks', 'attachments'), **fields)
+   :module: redminelib.managers.IssueManager
+   :noindex:
+
+   Copies single Issue resource by its id using the same API as Redmine's GUI copying which means copying
+   is done the most efficient way possible. By default links original to a copy via relations and copies
+   both subtasks and attachments.
+
+   :param int resource_id: (required). Issue id.
+   :param project_id: (required). Id or identifier of issue's project.
+   :type project_id: int or string
+   :param bool link_original: (optional). Whether to link the original issue to a copy via relations.
+   :param list include:
+    .. raw:: html
+
+       (optional). Additional data to copy or <code>None</code>. Accepted values:
+
+    - subtasks
+    - attachments
+
+   :param dict fields: (optional). Accepts the same fields as Issue's ``create()`` method to add or modify original values.
+   :return: :ref:`Resource` object
+
+.. code-block:: python
+
+   >>> copy = redmine.issue.copy(1, project_id='vacation', link_original=False, include=['attachments'])
+   >>> copy
+   <redminelib.resources.Issue #124 "Vacation">
+
+.. py:method:: copy(link_original=True, include=('subtasks', 'attachments'), **fields)
+   :module: redminelib.resources.Issue
+   :noindex:
+
+   Copies current Issue resource object.
+
+   :return: :ref:`Resource` object
+
+.. code-block:: python
+
+   >>> issue = redmine.issue.get(123)
+   >>> copy = issue.copy(subject='this is a copy')
+   >>> copy
+   <redminelib.resources.Issue #124 "this is a copy">
 
 Export
 ------
@@ -488,6 +563,16 @@ Journals
 The history of an issue is represented as a :ref:`ResourceSet` of ``IssueJournal`` resources.
 Currently the following operations are possible:
 
+create
+++++++
+
+To create a new record in issue history, i.e. new journal:
+
+.. code-block:: python
+
+   redmine.issue.update(1, notes='new note')
+   True
+
 read
 ++++
 
@@ -512,20 +597,57 @@ After that they can be used as usual:
 .. code-block:: python
 
    >>> for journal in issue.journals:
-   ...     print journal.id, journal.notes
+   ...     print(journal.id, journal.notes)
    ...
    1 foobar
    2 lalala
    3 hohoho
 
-create
+update
 ++++++
 
-To create a new record in issue history, i.e. new journal:
+.. versionadded:: 2.4.0
+
+To update `notes` attribute (the only attribute that can be updated) of a journal:
 
 .. code-block:: python
 
-   redmine.issue.update(1, notes='new note')
+   >>> issue = redmine.issue.get(1, include=['journals'])
+   >>> for journal in issue.journals:
+   ...     journal.save(notes='setting notes to a new value')
+   ...
+
+Or if you know the `id` beforehand:
+
+.. code-block:: python
+
+   >>> redmine.issue_journal.update(1, notes='setting notes to a new value')
+   True
+
+delete
+++++++
+
+.. versionadded:: 2.4.0
+
+To delete a journal set its `notes` attribute to empty string:
+
+.. code-block:: python
+
+   >>> issue = redmine.issue.get(1, include=['journals'])
+   >>> for journal in issue.journals:
+   ...     journal.save(notes='')
+   ...
+
+Or if you know the `id` beforehand:
+
+.. code-block:: python
+
+   >>> redmine.issue_journal.update(1, notes='')
+   True
+
+.. note::
+
+   You can only delete a journal that doesn't have the associated `details` attribute.
 
 Watchers
 --------
@@ -539,7 +661,7 @@ add
    :module: redminelib.resources.Issue.Watcher
    :noindex:
 
-   Adds a user to issue watchers list by it's id.
+   Adds a user to issue watchers list by its id.
 
    :param int user_id: (required). User id.
    :return: True
@@ -557,7 +679,7 @@ remove
    :module: redminelib.resources.Issue.Watcher
    :noindex:
 
-   Removes a user from issue watchers list by it's id.
+   Removes a user from issue watchers list by its id.
 
    :param int user_id: (required). User id.
    :return: True

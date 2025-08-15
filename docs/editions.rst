@@ -13,10 +13,11 @@ Pro Edition
 
 Supports additional features like async requests to Redmine, additional Redmine plugins and
 so on. Licensed under `Python-Redmine Pro Edition License Version 1.0
-<https://python-redmine.com/license.html#pro-edition>`_. License can be bought `here
-<https://secure.2checkout.com/order/checkout.php?PRODS=4708754&QTY=1&CART=1&CARD=1&DISABLE_SHORT_FORM_MOBILE=1>`_
-for 24.99$ (additional taxes and/or charges may apply (will be shown before the purchase) depending on the
-country of purchase and payment method used), doesn't expire and is valid for the current major Python-Redmine
+<https://python-redmine.com/license.html#pro-edition>`_. License for a Pro Edition can currently only be bought via `TON <https://ton.org>`__ by transferring 25 USDT
+to the following wallet address: :code:`UQBn0FIZM1zM7lmIeCczdk9sIMDrvBfFbbuXsYJPdCaFcmYJ`. After the
+transaction is complete, be sure to send an email to support@python-redmine.com that contains your transaction ID
+and you will receive an email back with all the details regarding Pro Edition installation process. Please give us
+at least 3 to 6 hours to process these emails. License doesn't expire and is valid for the current major Python-Redmine
 version, e.g. if at the time of purchase current Python-Redmine version is 2.0.1 then license will be valid for
 all 2.x.x versions. Below you can find a feature matrix which shows all the differences between these editions:
 
@@ -35,12 +36,12 @@ all 2.x.x versions. Below you can find a feature matrix which shows all the diff
        <td class="group" colspan="3">Support (maximum response time)</td>
      </tr>
      <tr>
-       <td class="feature">GitHub (72 hours)</td>
+       <td class="feature">GitHub (no limit)</td>
        <td class="implemented">YES</td>
        <td class="implemented">YES</td>
      </tr>
      <tr>
-       <td class="feature">Email (12 hours)</td>
+       <td class="feature">Email (24 hours)</td>
        <td class="not-implemented">NO</td>
        <td class="implemented">YES</td>
      </tr>
@@ -126,6 +127,11 @@ all 2.x.x versions. Below you can find a feature matrix which shows all the diff
        <td class="implemented">YES</td>
      </tr>
      <tr>
+       <td class="feature">File</td>
+       <td class="implemented">YES</td>
+       <td class="implemented">YES</td>
+     </tr>
+     <tr>
        <td class="feature">Attachment</td>
        <td class="implemented">YES</td>
        <td class="implemented">YES</td>
@@ -199,10 +205,59 @@ all 2.x.x versions. Below you can find a feature matrix which shows all the diff
        <td class="implemented">YES</td>
      </tr>
      <tr>
-       <td class="group" colspan="3">RedmineUP Checklist Plugin API endpoints</td>
+       <td class="group" colspan="3">RedmineUP Helpdesk Plugin API endpoints</td>
+     </tr>
+     <tr>
+       <td class="feature">Ticket</td>
+       <td class="not-implemented">NO</td>
+       <td class="implemented">YES</td>
+     </tr>
+     <tr>
+       <td class="group" colspan="3">RedmineUP Checklists Plugin API endpoints</td>
      </tr>
      <tr>
        <td class="feature">Checklist</td>
+       <td class="not-implemented">NO</td>
+       <td class="implemented">YES</td>
+     </tr>
+     <tr>
+       <td class="group" colspan="3">RedmineUP Invoices Plugin API endpoints</td>
+     </tr>
+     <tr>
+       <td class="feature">Invoice</td>
+       <td class="not-implemented">NO</td>
+       <td class="implemented">YES</td>
+     </tr>
+     <tr>
+       <td class="feature">Invoice Payment</td>
+       <td class="not-implemented">NO</td>
+       <td class="implemented">YES</td>
+     </tr>
+     <tr>
+       <td class="feature">Expense</td>
+       <td class="not-implemented">NO</td>
+       <td class="implemented">YES</td>
+     </tr>
+     <tr>
+       <td class="group" colspan="3">RedmineUP Products Plugin API endpoints</td>
+     </tr>
+     <tr>
+       <td class="feature">Product</td>
+       <td class="not-implemented">NO</td>
+       <td class="implemented">YES</td>
+     </tr>
+     <tr>
+       <td class="feature">Product Category</td>
+       <td class="not-implemented">NO</td>
+       <td class="implemented">YES</td>
+     </tr>
+     <tr>
+       <td class="feature">Order</td>
+       <td class="not-implemented">NO</td>
+       <td class="implemented">YES</td>
+     </tr>
+     <tr>
+       <td class="feature">Order Status</td>
        <td class="not-implemented">NO</td>
        <td class="implemented">YES</td>
      </tr>

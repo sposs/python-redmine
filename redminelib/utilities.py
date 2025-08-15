@@ -2,54 +2,25 @@
 Provides helper utilities.
 """
 
-import sys
 import copy
 import string
-import functools
+import urllib.parse
 
-try:
-    from urllib.parse import quote
-except ImportError:
-    from urllib import quote
+from . import exceptions
 
 
-def fix_unicode(cls):
+def versiontuple(version):
     """
-    A class decorator that defines __unicode__, makes __str__ and __repr__
-    return a utf-8 encoded string and encodes unicode exception messages
-    to utf-8 encoded strings under Python 2. Does nothing under Python 3.
+    Converts numeric SemVer version string to tuple.
 
-    :param class cls: (required). A class where unicode should be fixed.
+    :param string version: (required). Version string to convert.
     """
-    if sys.version_info[0] >= 3:
-        return cls
+    parts = str(version).split('.')
 
-    def decorator(fn):
-        @functools.wraps(fn, assigned=('__name__', '__doc__'))
-        def wrapper(self, *args, **kwargs):
-            if fn.__name__ == '__init__':
-                return fn(self, *[arg.encode('utf-8') if isinstance(arg, unicode) else arg for arg in args], **kwargs)
-            return fn(self).encode('utf-8')
-        return wrapper
+    if len(parts) != 3 or not all(part.isnumeric() for part in parts):
+        raise exceptions.VersionFormatError(version)
 
-    if issubclass(cls, Exception):
-        cls.__init__ = decorator(cls.__init__)
-        return cls
-
-    cls.__unicode__ = cls.__str__
-    cls.__str__ = decorator(cls.__unicode__)
-    cls.__repr__ = decorator(cls.__repr__)
-    return cls
-
-
-def with_metaclass(meta, *bases):
-    """
-    Create a base class with a metaclass.
-    """
-    class MetaClass(meta):
-        def __new__(cls, name, this_bases, dct):
-            return meta(name, bases, dct)
-    return type.__new__(MetaClass, 'temporary_class', (), {})
+    return tuple(int(part) for part in parts)
 
 
 def merge_dicts(a, b):
@@ -86,7 +57,7 @@ class ResourceQueryFormatter(string.Formatter):
         self.unused_kwargs = kwargs
 
     def format_field(self, value, format_spec):
-        return quote(super(ResourceQueryFormatter, self).format_field(value, format_spec).encode('utf-8'))
+        return urllib.parse.quote(super().format_field(value, format_spec).encode('utf-8'))
 
 
 class ResourceQueryStr(str):

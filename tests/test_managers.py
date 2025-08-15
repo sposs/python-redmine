@@ -12,7 +12,7 @@ class FooResource(resources.Project):
 
 class ResourceManagerTestCase(BaseRedmineTestCase):
     def test_has_custom_repr(self):
-        self.assertEqual(repr(self.redmine.issue), '<redminelib.managers.ResourceManager object for Issue resource>')
+        self.assertEqual(repr(self.redmine.query), '<redminelib.managers.ResourceManager object for Query resource>')
 
     def test_supports_additional_resources(self):
         self.assertIsInstance(self.redmine.foo_resource, managers.ResourceManager)
@@ -21,7 +21,7 @@ class ResourceManagerTestCase(BaseRedmineTestCase):
         self.assertRaises(exceptions.ResourceError, lambda: self.redmine.foobar)
 
     def test_not_supported_version_exception(self):
-        self.redmine.ver = '0.0.1'
+        self.redmine.ver = (0, 0, 1)
         self.assertRaises(exceptions.ResourceVersionMismatchError, lambda: self.redmine.project)
 
     def test_convert_dict_to_resource_object(self):
@@ -125,7 +125,7 @@ class ResourceManagerTestCase(BaseRedmineTestCase):
         with warnings.catch_warnings(record=True) as w:
             warnings.simplefilter('always')
             issue = self.redmine.issue.create(project_id=1, subject='Foo', uploads=[{'path': stream}])
-            self.assertEquals(len(w), 1)
+            self.assertEqual(len(w), 1)
             self.assertIs(w[0].category, exceptions.PerformanceWarning)
         self.assertEqual(issue.project_id, 1)
         self.assertEqual(issue.subject, 'Foo')
@@ -166,7 +166,7 @@ class ResourceManagerTestCase(BaseRedmineTestCase):
         with warnings.catch_warnings(record=True) as w:
             warnings.simplefilter('always')
             self.assertEqual(self.redmine.issue.update(1, subject='Bar', uploads=[{'path': stream}]), True)
-            self.assertEquals(len(w), 1)
+            self.assertEqual(len(w), 1)
             self.assertIs(w[0].category, exceptions.PerformanceWarning)
 
     def test_update_resource_returns_none(self):
@@ -254,7 +254,7 @@ class ResourceManagerTestCase(BaseRedmineTestCase):
         self.assertRaises(exceptions.ResourceNotFoundError, lambda: list(self.redmine.project.all()))
 
     def test_resource_requirements_exception(self):
-        FooResource.requirements = ('foo plugin', ('bar plugin', '1.2.3'),)
+        FooResource.requirements = ('foo plugin', ('bar plugin', (1, 2, 3)),)
         self.response.status_code = 404
         self.assertRaises(exceptions.ResourceRequirementsError, lambda: self.redmine.foo_resource.get(1))
         self.assertRaises(exceptions.ResourceRequirementsError, lambda: list(self.redmine.foo_resource.all()))

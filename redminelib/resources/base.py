@@ -1,13 +1,10 @@
 """
-Defines base Redmine resource class and it's infrastructure.
+Defines base Redmine resource class and its infrastructure.
 """
 
-from __future__ import unicode_literals
-
-from datetime import date, datetime
+from datetime import date, datetime, timezone
 
 from .. import managers, utilities, exceptions
-
 
 registry = {}
 
@@ -15,13 +12,12 @@ registry = {}
 class Registrar(type):
     """
     A resource that implements this metaclass, i.e. all resources that inherit from BaseResource,
-    will be added to a resource registry to be managed by it's ResourceManager. Resource classes
+    will be added to a resource registry to be managed by its ResourceManager. Resource classes
     which name starts with Base are considered base classes and not added to the registry.
     """
     def __new__(mcs, name, bases, attrs):
-        mcs.update_query_strings(attrs)
-
-        cls = super(Registrar, mcs).__new__(mcs, name, bases, attrs)
+        cls = super().__new__(mcs, name, bases, mcs.bulk_update_attrs(attrs))
+        mcs.bulk_update_cls_attrs(cls, attrs)
 
         if name.startswith('Base'):  # base classes shouldn't be added to the registry
             return cls
@@ -29,13 +25,16 @@ class Registrar(type):
         if name not in registry:  # a name maybe already added to registry by other classes
             registry[name] = {}
 
-        for attr in ('_attach_includes', '_attach_relations'):
+        for attr in ('_attach_includes', '_attach_relations', '_attach_includes_map'):
             class_attr_name = attr[7:]
             registry_attr_name = attr[1:]
 
             if registry_attr_name in registry[name]:
-                mcs.update_cls_attr(cls, class_attr_name, registry[name][registry_attr_name].keys())
-                mcs.update_cls_attr(cls, '_resource_set_map', registry[name][registry_attr_name])
+                if attr == '_attach_includes_map':
+                    mcs.update_cls_attr(cls, class_attr_name, dict(registry[name][registry_attr_name].keys()))
+                else:
+                    mcs.update_cls_attr(cls, class_attr_name, registry[name][registry_attr_name].keys())
+                    mcs.update_cls_attr(cls, '_resource_set_map', registry[name][registry_attr_name])
 
             if not isinstance(getattr(cls, attr), dict):
                 continue
@@ -50,21 +49,44 @@ class Registrar(type):
                 registry[resource_name][registry_attr_name][value] = name
 
                 if 'class' in registry[resource_name]:
-                    mcs.update_cls_attr(registry[resource_name]['class'], class_attr_name, [value])
-                    mcs.update_cls_attr(registry[resource_name]['class'], '_resource_set_map', {value: name})
+                    if attr == '_attach_includes_map':
+                        mcs.update_cls_attr(registry[resource_name]['class'], class_attr_name, dict([value]))
+                    else:
+                        mcs.update_cls_attr(registry[resource_name]['class'], class_attr_name, [value])
+                        mcs.update_cls_attr(registry[resource_name]['class'], '_resource_set_map', {value: name})
 
         return registry[name].setdefault('class', cls)
 
     @staticmethod
-    def update_query_strings(attrs):
+    def bulk_update_attrs(attrs):
         """
-        Updates all `query_*` string attributes to use ResourceQueryFormatter by default.
+        Updates attrs with specific features and/or actualizes their content before a class is created.
+
+        :param dict attrs: (required). Attributes to work with.
         """
-        for k, v in attrs.items():
-            if k.startswith('query_') and v is not None:
-                attrs[k] = utilities.ResourceQueryStr(v)
+        for attr, value in attrs.items():
+            # `query_*` class attributes should use ResourceQueryFormatter by default
+            if attr.startswith('query_') and value is not None:
+                attrs[attr] = utilities.ResourceQueryStr(value)
 
         return attrs
+
+    @classmethod
+    def bulk_update_cls_attrs(mcs, cls, attrs):
+        """
+        Updates attrs with specific features and/or actualizes their content after a class is created.
+
+        :param any cls: (required). Resource class.
+        :param dict attrs: (required). Attributes to work with.
+        """
+        properties = []
+
+        for attr, value in attrs.items():
+            # `_members` class attribute should also contain all public properties
+            if not attr.startswith('_') and isinstance(value, property):
+                properties.append(attr)
+
+        mcs.update_cls_attr(cls, '_members', properties)
 
     @staticmethod
     def update_cls_attr(cls, name, value):
@@ -74,12 +96,12 @@ class Registrar(type):
 
         :param any cls: (required). Resource class.
         :param string name: (required). Attribute name.
-        :param any value: (optional). Attribute value.
+        :param any value: (required). Attribute value.
         """
         attr = getattr(cls, name, None)
 
         if isinstance(attr, list):
-            value = list(attr) + list(value)
+            value = list(set().union(attr, value))
         elif isinstance(attr, dict):
             value = dict(attr, **value)
         else:
@@ -88,8 +110,7 @@ class Registrar(type):
         setattr(cls, name, value)
 
 
-@utilities.fix_unicode
-class BaseResource(utilities.with_metaclass(Registrar)):
+class BaseResource(metaclass=Registrar):
     """
     Implementation of Redmine resource.
     """
@@ -109,6 +130,7 @@ class BaseResource(utilities.with_metaclass(Registrar)):
     query_create = None
     query_update = None
     query_delete = None
+    query_url = None
     search_hints = None
     extra_export_columns = []
     http_method_create = 'post'
@@ -118,6 +140,7 @@ class BaseResource(utilities.with_metaclass(Registrar)):
 
     _repr = [['id', 'name']]
     _includes = []
+    _includes_map = {}
     _relations = []
     _relations_name = None
     _unconvertible = ['name', 'description']
@@ -125,6 +148,7 @@ class BaseResource(utilities.with_metaclass(Registrar)):
     _create_readonly = ['id', 'created_on', 'updated_on', 'author', 'user', 'project', 'issue']
     _update_readonly = _create_readonly[:]
     _attach_includes = None
+    _attach_includes_map = None
     _attach_relations = None
     _resource_map = {}  # Resources that should become a Resource object
     _resource_set_map = {}  # Resources that should become a ResourceSet object
@@ -148,9 +172,15 @@ class BaseResource(utilities.with_metaclass(Registrar)):
         if self._relations_name is None:
             self._relations_name = self.__class__.__name__.lower()
 
+    def __eq__(self, other):
+        if isinstance(other, self.__class__):
+            return self.internal_id == other.internal_id
+        else:
+            return False
+
     def __getitem__(self, item):
         """
-        Provides a dictionary-like access to Resource attributes.
+        Provides dictionary-like access to Resource attributes.
         """
         return getattr(self, item)
 
@@ -168,24 +198,26 @@ class BaseResource(utilities.with_metaclass(Registrar)):
             raise AttributeError
 
         # If this isn't the first time attribute access we can return it from cache
-        encoded = self._encoded_attrs.get(attr)
-        if encoded is not None:
-            return encoded
+        if attr in self._encoded_attrs:
+            return self._encoded_attrs[attr]
 
-        # Else this is the first time access and we need to encode the attribute
-        decoded = self._decoded_attrs.get(attr)
-        if decoded is not None:
-            attr, encoded = self.encode(attr, decoded, self.manager)
-        elif attr in self._relations:
-            filters = {'{0}_id'.format(self._relations_name): self.internal_id}
-            encoded = self.manager.new_manager(self._resource_set_map[attr]).filter(**filters)
+        # Else this is the first time access hence we need to encode the attribute
+        if attr in self._relations:
+            filters = {f'{self._relations_name}_id': self.internal_id}
+            self._encoded_attrs[attr] = self.manager.new_manager(self._resource_set_map[attr]).filter(**filters)
         elif attr in self._includes:
-            attr, encoded = self.encode(attr, self.refresh(itself=False, include=attr).raw()[attr] or [], self.manager)
+            value = self._decoded_attrs[attr] = self._decoded_attrs.pop(self._includes_map.get(attr, attr), None)
+
+            if value is None:
+                value = self.refresh(itself=False, include=attr).raw().get(self._includes_map.get(attr, attr)) or []
+
+            self._encoded_attrs.update([self.encode(attr, value, self.manager)])
+        elif attr in self._decoded_attrs:
+            self._encoded_attrs.update([self.encode(attr, self._decoded_attrs[attr], self.manager)])
 
         # In case of successful encoding we put it to a cache and return
-        if encoded is not None:
-            self._encoded_attrs[attr] = encoded
-            return encoded
+        if attr in self._encoded_attrs:
+            return self._encoded_attrs[attr]
 
         # Else we return the defaults if this is a new item or throw an exception
         if self.is_new():
@@ -204,8 +236,10 @@ class BaseResource(utilities.with_metaclass(Registrar)):
         """
         Sets the requested attribute.
         """
-        if attr in self._members or attr.startswith('_'):
-            return super(BaseResource, self).__setattr__(attr, value)
+        custom_settable = [*self._single_attr_id_map, *self._multiple_attr_id_map]
+
+        if attr.startswith('_') or attr in self._members and attr not in custom_settable:
+            return super().__setattr__(attr, value)
         elif attr in self._create_readonly and self.is_new():
             raise exceptions.ReadonlyAttrError
         elif attr in self._update_readonly and not self.is_new():
@@ -232,7 +266,7 @@ class BaseResource(utilities.with_metaclass(Registrar)):
             elif attr in self._multiple_attr_id_map:
                 self._decoded_attrs[self._multiple_attr_id_map[attr]] = [{'id': attr_id} for attr_id in decoded_value]
 
-        # When we set an attribute we put it's decoded value only to a _decoded_attrs
+        # When we set an attribute we put its decoded value only to a _decoded_attrs
         # dict because it may never be accessed again, that is why we don't waste time
         # on the encode process but only clean the cache, and in case if it will be
         # accessed, the encoding process will be run automatically by __getattr__
@@ -252,6 +286,9 @@ class BaseResource(utilities.with_metaclass(Registrar)):
         if type_ is date:
             return attr, value.strftime(manager.redmine.date_format)
         elif type_ is datetime:
+            if manager.redmine.timezone is not None and value.tzinfo is not None:
+                value = value.astimezone(timezone.utc)
+
             return attr, value.strftime(manager.redmine.datetime_format)
 
         if attr == 'uploads':
@@ -286,7 +323,12 @@ class BaseResource(utilities.with_metaclass(Registrar)):
 
         try:
             try:
-                return attr, datetime.strptime(value, manager.redmine.datetime_format)
+                value = datetime.strptime(value, manager.redmine.datetime_format)
+
+                if manager.redmine.timezone is not None:
+                    value = value.replace(tzinfo=timezone.utc).astimezone(manager.redmine.timezone)
+
+                return attr, value
             except (TypeError, ValueError):
                 return attr, datetime.strptime(value, manager.redmine.date_format).date()
         except (TypeError, ValueError):
@@ -381,7 +423,8 @@ class BaseResource(utilities.with_metaclass(Registrar)):
         if not self.is_new():
             self.pre_update()
             self.manager.update(self.internal_id, **self._changes)
-            self._decoded_attrs['updated_on'] = datetime.utcnow().strftime(self.manager.redmine.datetime_format)
+            self._decoded_attrs['updated_on'] = datetime.now(timezone.utc).strftime(
+                self.manager.redmine.datetime_format)
             self.post_update()
         else:
             self.pre_create()
@@ -442,7 +485,9 @@ class BaseResource(utilities.with_metaclass(Registrar)):
         """
         Returns full URL to the Resource for humans if there is one.
         """
-        if self.query_one is not None:
+        if self.query_url is not None:
+            return self.manager.redmine.url + self.query_url.format(self.internal_id)
+        elif self.query_one is not None:
             return self.manager.redmine.url + self.query_one.format(self.internal_id)[:-5]
 
         return None
@@ -456,7 +501,7 @@ class BaseResource(utilities.with_metaclass(Registrar)):
 
     def is_new(self):
         """
-        Checks if Resource was just created and not yet saved to Redmine or it is an existing Resource.
+        Checks if Resource was just created and not yet saved to Redmine, or it is an existing Resource.
         """
         return False if 'id' in self._decoded_attrs or 'created_on' in self._decoded_attrs else True
 
@@ -464,13 +509,13 @@ class BaseResource(utilities.with_metaclass(Registrar)):
         """
         Allows dir() to be called on a Resource object and shows Resource attributes.
         """
-        return list(self._decoded_attrs.keys())
+        return [*self._decoded_attrs, *self._members]
 
     def __iter__(self):
         """
         Provides a way to iterate through Resource attributes and its values.
         """
-        return iter(self._decoded_attrs.items())
+        return iter(dict(self._decoded_attrs, **{m: getattr(self, m, None) for m in self._members}).items())
 
     def __int__(self):
         """
@@ -495,7 +540,7 @@ class BaseResource(utilities.with_metaclass(Registrar)):
                 _repr_.insert(0, value)
 
                 if attr != 'id':
-                    _str_.insert(0, value)
+                    _str_.insert(0, str(value))
 
             if len(_repr_) > 0:
                 break
@@ -517,12 +562,12 @@ class BaseResource(utilities.with_metaclass(Registrar)):
         Official representation of a Resource object.
         """
         values = self._representation('repr')
-        view = '<redminelib.resources.{0.__class__.__name__}'.format(self)
+        view = f'<redminelib.resources.{self.__class__.__name__}'
 
         if isinstance(values[0], int):
-            view += ' #{0}'.format(values.pop(0))
+            view += f' #{values.pop(0)}'
 
         if len(values) > 0:
-            view += ' "{0}"'.format(' '.join(values))
+            view += f" \"{' '.join(values)}\""
 
         return view + '>'

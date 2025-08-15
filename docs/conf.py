@@ -1,5 +1,6 @@
 import os
 import sys
+import datetime
 
 # If extensions (or modules to document with autodoc) are in another directory,
 # add these directories to sys.path here. If the directory is relative to the
@@ -9,7 +10,7 @@ sys.path.insert(0, os.path.abspath('..'))
 # Add any Sphinx extension module names here, as strings. They can be
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
 # ones.
-extensions = ['sphinx.ext.autodoc']
+extensions = ['sphinx.ext.autodoc', 'sphinxcontrib.jquery']
 
 # How to sort documented members
 autodoc_member_order = 'bysource'
@@ -24,8 +25,8 @@ source_suffix = '.rst'
 master_doc = 'index'
 
 # General information about the project.
-project = u'Python-Redmine'
-copyright = u'2020, Maxim Tepkeev'
+project = 'Python-Redmine'
+project_copyright = f'{datetime.date.today().year}, Maxim Tepkeev'
 
 # List of patterns, relative to source directory, that match files and
 # directories to ignore when looking for source files.
@@ -57,13 +58,24 @@ html_theme_options = {
 # so a file named "default.css" will overwrite the builtin "default.css".
 html_static_path = ['_static']
 
+# Either relative to html_static_path paths or full paths (eg. https://...)
+html_css_files = [
+    'css/python-redmine.css'
+]
+
 # Custom sidebar templates, maps document names to template names.
 html_sidebars = {
     '**': ['about.html', 'navigation.html', 'searchbox.html']
 }
 
 # If false, no index is generated.
-html_use_index = True
+html_use_index = False
+
+# If false, no module index is generated.
+html_domain_indices = False
+
+# If true, the reST sources are included in the HTML build as _sources/name.
+html_copy_source = False
 
 # If true, links to the reST sources are added to the pages.
 html_show_sourcelink = False
@@ -71,7 +83,5 @@ html_show_sourcelink = False
 # Output file base name for HTML help builder.
 htmlhelp_basename = 'PythonRedminedoc'
 
-
-# Documentation setup
-def setup(app):
-    app.add_stylesheet('css/python-redmine.css')
+# Ignore all py:class warning in nitpicky mode.
+nitpick_ignore_regex = [(r'py:class', r'.*')]

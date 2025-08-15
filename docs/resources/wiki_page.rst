@@ -6,7 +6,7 @@ Supported by Redmine starting from version 2.2
 Manager
 -------
 
-All operations on the WikiPage resource are provided by it's manager. To get access to it
+All operations on the WikiPage resource are provided by its manager. To get access to it
 you have to call ``redmine.wiki_page`` where ``redmine`` is a configured redmine object.
 See the :doc:`../configuration` about how to configure redmine object.
 
@@ -89,7 +89,7 @@ get
    :module: redminelib.managers.WikiPageManager
    :noindex:
 
-   Returns single WikiPage resource from Redmine by it's title.
+   Returns single WikiPage resource from Redmine by its title.
 
    :param string resource_id: (required). Title of the wiki page.
    :param project_id: (required). Id or identifier of wiki page's project.
@@ -253,7 +253,7 @@ delete
    :module: redminelib.managers.WikiPageManager
    :noindex:
 
-   Deletes single WikiPage resource from Redmine by it's title.
+   Deletes single WikiPage resource from Redmine by its title.
 
    :param string resource_id: (required). Title of the wiki page.
    :param project_id: (required). Id or identifier of wiki page's project.
@@ -300,20 +300,3 @@ Export
    >>> wiki = redmine.wiki_page.get('Foo', project_id=1)
    >>> wiki.export('pdf', savepath='/home/jsmith')
    '/home/jsmith/123.pdf'
-
-.. py:method:: export(fmt, savepath=None, filename=None)
-   :module: redminelib.resultsets.ResourceSet
-   :noindex:
-
-   Exports a resource set of WikiPage resources in one of the following formats: atom, pdf, html
-
-   :param string fmt: (required). Format to use for export.
-   :param string savepath: (optional). Path where to save the file.
-   :param string filename: (optional). Name that will be used for the file.
-   :return: String or Object
-
-.. code-block:: python
-
-   >>> wiki_pages = redmine.wiki_page.filter(project_id='vacation')
-   >>> wiki_pages.export('pdf', savepath='/home/jsmith', filename='wiki_pages.pdf')
-   '/home/jsmith/wiki_pages.pdf'

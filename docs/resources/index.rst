@@ -41,10 +41,39 @@ RedmineUP CRM
    deal_category
    crm_query
 
-RedmineUP Checklist
--------------------
+RedmineUP Helpdesk
+------------------
+
+.. toctree::
+   :maxdepth: 1
+
+   ticket
+
+RedmineUP Checklists
+--------------------
 
 .. toctree::
    :maxdepth: 1
 
    checklist
+
+RedmineUP Invoices
+------------------
+
+.. toctree::
+   :maxdepth: 1
+
+   invoice
+   invoice_payment
+   expense
+
+RedmineUP Products
+------------------
+
+.. toctree::
+   :maxdepth: 1
+
+   product
+   product_category
+   order
+   order_status

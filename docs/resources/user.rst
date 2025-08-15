@@ -6,7 +6,7 @@ Supported by Redmine starting from version 1.1
 Manager
 -------
 
-All operations on the User resource are provided by it's manager. To get access
+All operations on the User resource are provided by its manager. To get access
 to it you have to call ``redmine.user`` where ``redmine`` is a configured redmine
 object. See the :doc:`../configuration` about how to configure redmine object.
 
@@ -104,7 +104,7 @@ get
    :module: redminelib.managers.ResourceManager
    :noindex:
 
-   Returns single User resource from Redmine by it's id.
+   Returns single User resource from Redmine by its id.
 
    :param int resource_id: (required). Id of the user.
    :param list include:
@@ -154,10 +154,20 @@ get
    resource objects wrapped in a :ref:`ResourceSet` which are somehow related to a User
    resource object. The relations provided by the User resource object are:
 
-   * issues
    * time_entries
+   * issues (alias to issues_assigned)
+   * issues_assigned (requires Python-Redmine v2.5.0)
+   * issues_authored (requires Python-Redmine v2.5.0)
    * deals (requires Pro Edition and `CRM plugin <https://www.redmineup.com/pages/plugins/crm>`_)
    * contacts (requires Pro Edition and `CRM plugin <https://www.redmineup.com/pages/plugins/crm>`_)
+   * invoices (requires Pro Edition and `Invoices plugin <https://www.redmineup.com/pages/plugins/invoices>`_
+     >= 4.1.3)
+   * expenses (requires Pro Edition and `Invoices plugin <https://www.redmineup.com/pages/plugins/invoices>`_
+     >= 4.1.3)
+   * products (requires Pro Edition and `Products plugin <https://www.redmineup.com/pages/plugins/products>`_
+     >= 2.1.5)
+   * orders (requires Pro Edition and `Products plugin <https://www.redmineup.com/pages/plugins/products>`_
+     >= 2.1.5)
 
    .. code-block:: python
 
@@ -362,7 +372,7 @@ delete
    :module: redminelib.managers.ResourceManager
    :noindex:
 
-   Deletes single User resource from Redmine by it's id.
+   Deletes single User resource from Redmine by its id.
 
    :param int resource_id: (required). User id.
    :return: True

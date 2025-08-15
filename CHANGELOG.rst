@@ -1,8 +1,145 @@
 Changelog
 ---------
 
+2.6.0 (XXXX-XX-XX)
+++++++++++++++++++
+
+**Improvements**:
+
+- Added `__eq__` methods to resources for direct instance equality comparison (`Issue #336
+  <https://github.com/maxtepkeev/python-redmine/pull/336>`__) (thanks to `Patrick Donnelly
+  <https://github.com/batrick>`__)
+
+**Bugfixes**:
+
+- Not all parameters, i.e. timeout, were forwarded to requests module (`Issue #343 <https://github.com/maxtepkeev/python-redmine/pull/343>`__)
+  (thanks to `timerke <https://github.com/timerke>`__)
+
+2.5.0 (2024-03-31)
+++++++++++++++++++
+
+**Deprecations**:
+
+- Requests version required >= 2.31.0
+
+**New Features**:
+
+- *Pro Edition:* RedmineUP `Products plugin <https://www.redmineup.com/pages/plugins/products>`__ support
+- Issue copying (see `docs <https://python-redmine.com/resources/issue.html#copying>`__ for details)
+  (`Issue #203 <https://github.com/maxtepkeev/python-redmine/issues/203>`__)
+
+**Improvements**:
+
+- Migrated CI to GitHub Actions, also we now test not only on Linux, but on macOS and Windows as well
+- ``dir(resource)`` and ``list(resource)`` now also show properties of an object
+- Support for ``issues_assigned`` and ``issues_authored`` relations in User object
+  (`Issue #317 <https://github.com/maxtepkeev/python-redmine/issues/317>`__)
+- Original filename will be used as a filename for all uploaded files if a path was provided and filename wasn't set
+- *Pro Edition:* Added support for RedmineUP Contact avatar add/update operations
+  (see `docs <https://python-redmine.com/resources/contact.html#create-methods>`__ for details)
+- *Pro Edition:* Added support for RedmineUP DealCategory ``create()``, ``update()``, ``delete()`` operations
+  (see `docs <https://python-redmine.com/resources/deal_category.html#create-methods>`__ for details)
+- *Pro Edition:* RedmineUP CrmQuery resource now supports ``invoices`` and ``expenses`` relation attributes
+- ``PerformanceWarning`` will be issued when Python-Redmine does some unnecessary redirects before the actual
+  request is made
+
+**Changes**:
+
+- *Backwards Incompatible:* API key is now being sent in the X-Redmine-API-Key header instead of the key GET
+  parameter which makes things more secure in case of a failed connection, but it might created issues for servers
+  that don't do custom request header forwarding by default, so be sure to check your web server before upgrading
+  (`Issue #328 <https://github.com/maxtepkeev/python-redmine/issues/328>`__ and
+  `Issue #330 <https://github.com/maxtepkeev/python-redmine/issues/330>`__) (thanks to `Tom Misilo <https://github.com/misilot>`__
+  and `Ricardo Branco <https://github.com/ricardobranco777>`__)
+- *Backwards Incompatible:* User ``all`` operation now really returns all users, i.e. not only active, but locked,
+  registered and anonymous as well instead of only returning just active users in previous versions due to the
+  respect to Redmine's standard behaviour (`Issue #327 <https://github.com/maxtepkeev/python-redmine/issues/327>`__)
+
+**Bugfixes**:
+
+- Tests were failing on Windows OS
+- Tests were failing on Python 3.12 (`Issue #332 <https://github.com/maxtepkeev/python-redmine/pull/332>`__)
+  (thanks to `Michał Górny <https://github.com/mgorny>`__)
+- Some closed Issues weren't converted to Resource objects using ``redmine.search()``
+- *Pro Edition:* RedmineUP Invoice resource ``order`` attribute was returned as a dict instead of being converted to
+  Resource object
+- *Pro Edition:* RedmineUP CrmQuery resource ``deals`` and ``contacts`` relation attributes didn't work
+- *Pro Edition:* RedmineUP DealStatus resource ``deals`` relation attribute didn't work
+
+**Documentation**:
+
+- Mentioned support for ``author_id`` in Issue's resource filter operation
+
+2.4.0 (2023-01-18)
+++++++++++++++++++
+
+**Deprecations**:
+
+- Requests version required >= 2.28.2
+- Removed Python 2.7, 3.5, 3.6 support as it's not supported by Requests anymore
+- Removed support for ``python setup.py test`` as it became deprecated by setuptools
+
+**New Features**:
+
+- *Pro Edition:* RedmineUP `Helpdesk plugin <https://www.redmineup.com/pages/plugins/helpdesk>`__ support
+  (`Issue #116 <https://github.com/maxtepkeev/python-redmine/issues/116>`__)
+- *Pro Edition:* RedmineUP `Invoices plugin <https://www.redmineup.com/pages/plugins/invoices>`__ support
+  (`Issue #301 <https://github.com/maxtepkeev/python-redmine/issues/301>`__)
+- Timezone support (see `docs <https://python-redmine.com/configuration.html#timezone>`__ for details)
+  (`Issue #271 <https://github.com/maxtepkeev/python-redmine/issues/271>`__)
+
+**Improvements**:
+
+- Added support for Python 3.10, 3.11 and latest PyPy
+- Added support for `allowed_statuses` to ``include`` param and on demand includes for Issue resource (requires
+  Redmine >= 5.0.0)
+- Added support for `issue_custom_fields` to ``include`` param and on demand includes for Project resource (requires
+  Redmine >= 4.2.0)
+- Added support for `comments` and `attachments` to ``include`` param and on demand includes for News resource
+  (requires Redmine >= 4.1.0)
+- *Pro Edition:* Added support for RedmineUP Contact `projects` to ``include`` param and on demand includes for
+  ``all()`` and ``filter()`` operations
+- *Pro Edition:* Added support for RedmineUP Note ``create()``, ``update()``, ``delete()`` operations (see `docs
+  <https://python-redmine.com/resources/note.html#create-methods>`__ for details)
+- Added support for Project ``close()``, ``reopen()``, ``archive()``, ``unarchive()`` operations (see `docs
+  <https://python-redmine.com/resources/project.html#additional-methods>`__ for details, requires Redmine >= 5.0.0)
+- Added support for updating and deleting issue journals (see `docs
+  <https://python-redmine.com/resources/issue.html#journals>`__ for details, requires Redmine >= 5.0.0)
+
+**Changes**:
+
+- *Backwards Incompatible:* Switched to pytest instead of nose as nose project is dead
+  (`Issue #312 <https://github.com/maxtepkeev/python-redmine/issues/312>`__)
+- *Backwards Incompatible:* Removed usage of distutils.LooseVersion internally since it became deprecated and
+  caused warnings, because of that all version info internally is now being represented as tuples and not strings
+  as before
+
+**Bugfixes**:
+
+- Stop raising `ResourceAttrError` for attributes that actually exist, but their value is `None`
+  (`Issue #261 <https://github.com/maxtepkeev/python-redmine/pull/261>`__)
+- *Pro Edition:* RedmineUP Deal resource ``related_contacts`` attribute was returned as a list instead of being converted to
+  ResourceSet object
+- Project resource ``default_assignee`` attribute was returned as a dict instead of being converted to
+  Resource object
+- Project resource ``time_entry_activities`` attribute was returned as a list instead of being converted to
+  ResourceSet object
+
+**Documentation**:
+
+- Document requirement of `project_id` param for `query_id` filter (`Issue #285 <https://github.com/maxtepkeev/
+  python-redmine/pull/285>`__) (thanks to `Doezer <https://github.com/Doezer>`__)
+- Mentioned support for ``user_id`` in TimeEntry's resource create/update (`Issue #298 <https://github.com/
+  maxtepkeev/python-redmine/issues/298>`__)
+- Mentioned support for additional scopes for Search API
+
 2.3.0 (2020-05-21)
 ++++++++++++++++++
+
+**Deprecations**:
+
+- Requests version required >= 2.23.0
+- Removed Python 3.4 support as it's not supported by Requests anymore
 
 **Improvements**:
 
@@ -19,11 +156,6 @@ Changelog
 - Added ``return_response`` and ``ignore_response`` parameters to engine which allow to skip response processing
   and speed up the create/update/delete operation in case response body isn't needed (see
   `docs <https://python-redmine.com/advanced/request_engines.html#session>`__ for details)
-
-**Changes**:
-
-- *Backwards Incompatible:* Requests version required >= 2.23.0
-- *Backwards Incompatible:* Removed Python 3.4 support as it's not supported by Requests anymore
 
 **Bugfixes**:
 
@@ -52,16 +184,16 @@ Changelog
 2.2.0 (2019-01-13)
 ++++++++++++++++++
 
+**Deprecations**:
+
+- Removed vendored Requests package and make it an external dependency as Requests did
+  the same with its own dependencies
+- Removed Python 2.6 and 3.3 support as they're not supported by Requests anymore
+
 **Improvements**:
 
 - ``PerformanceWarning`` will be issued when Python-Redmine does some unnecessary work under the hood to fix the
   clients code problems
-
-**Changes**:
-
-- *Backwards Incompatible:* Removed vendored Requests package and make it an external dependency as Requests did
-  the same with it's own dependencies
-- *Backwards Incompatible:* Removed Python 2.6 and 3.3 support as they're not supported by Requests anymore
 
 **Bugfixes**:
 
@@ -81,7 +213,7 @@ Changelog
 This release concentrates mostly on stability and adds small features here and there. Some of them
 are backwards incompatible and are marked as such. They shouldn't affect many users since most of
 them were used internally by Python-Redmine. A support for the Files API has been finally added, but
-please be sure to check it's documentation as the implementation on the Redmine side is horrible and
+please be sure to check its documentation as the implementation on the Redmine side is horrible and
 there are things to keep in mind while working with Files API. Lastly, only until the end of May 2018
 there is a chance to buy a Pro Edition for only 14.99$ instead of the usual 24.99$, this is your
 chance to get an edition with additional features for a good price and to support the further development
@@ -149,8 +281,8 @@ of Python-Redmine, more info `here <https://python-redmine.com/editions.html#pro
   of being converted to ``ResourceSet`` object
 - Downloads were downloaded fully into memory instead of being streamed as needed
 - ``ResourceRequirementsError`` exception was broken since v2.0.0
-- RedmineUP CRM Contact and Deal resources export functionality didn't work
-- RedmineUP CRM Contact and Deal resources sometimes weren't converted to Resource objects using Search API
+- *Pro Edition:* RedmineUP CRM Contact and Deal resources export functionality didn't work
+- *Pro Edition:* RedmineUP CRM Contact and Deal resources sometimes weren't converted to Resource objects using Search API
 
 **Documentation**:
 
@@ -183,7 +315,7 @@ user.
 
 **New Features**:
 
-- RedmineUP `Checklist plugin <https://www.redmineup.com/pages/plugins/checklists>`__ support
+- *Pro Edition:* RedmineUP `Checklist plugin <https://www.redmineup.com/pages/plugins/checklists>`__ support
 - `Request Engines <https://python-redmine.com/advanced/request_engines.html>`__ support. It is
   now possible to create engines to define how requests to Redmine are made, e.g. synchronous (one by one)
   or asynchronous using threads or processes etc
@@ -220,8 +352,8 @@ user.
     attributes of the resource to/from Python/Redmine
 
 - Attachment ``delete()`` method support (requires Redmine >= 3.3.0)
-- RedmineUP CRM Note resource now provides ``type`` attribute which shows text representation of ``type_id``
-- RedmineUP CRM DealStatus resource now provides ``status`` attribute which shows text representation of
+- *Pro Edition:* RedmineUP CRM Note resource now provides ``type`` attribute which shows text representation of ``type_id``
+- *Pro Edition:* RedmineUP CRM DealStatus resource now provides ``status`` attribute which shows text representation of
   ``status_type``
 - WikiPage resource now provides ``project_id`` attribute
 - Unicode handling was significantly rewritten and shouldn't cause any more troubles
@@ -499,7 +631,7 @@ user.
 0.7.0 (2014-03-12)
 ++++++++++++++++++
 
-- Added: WikiPage resource now automatically requests all of it's available attributes from
+- Added: WikiPage resource now automatically requests all of its available attributes from
   Redmine in case if some of them are not available in an existent resource object
 - Added: Support for setting date/datetime resource attributes using date/datetime Python objects
 - Added: Support for using date/datetime Python objects in all ResourceManager methods, i.e.
@@ -679,7 +811,7 @@ user.
 ++++++++++++++++++
 
 - Added: Python 2.6 support
-- Changed: WikiPage resource ``refresh()`` method now automatically determines it's project_id
+- Changed: WikiPage resource ``refresh()`` method now automatically determines its project_id
 - Fixed: Resource representation, i.e. ``__repr__()``, was broken in Python 2.7
 - Fixed: ``dir()`` call on a resource object didn't work in Python 3.2
 

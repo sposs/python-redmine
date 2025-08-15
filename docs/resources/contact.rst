@@ -6,7 +6,7 @@ Requires Pro Edition and `CRM plugin <https://www.redmineup.com/pages/plugins/cr
 Manager
 -------
 
-All operations on the Contact resource are provided by it's manager. To get access to it
+All operations on the Contact resource are provided by its manager. To get access to it
 you have to call ``redmine.contact`` where ``redmine`` is a configured redmine object.
 See the :doc:`../configuration` about how to configure redmine object.
 
@@ -61,6 +61,14 @@ create
     - 1 - public
     - 2 - private
 
+   :param dict avatar:
+    .. raw:: html
+
+       (optional). Avatar to be used for the contact as dict, accepted keys are:
+
+    - path (required). Absolute file path or file-like object that should be uploaded.
+    - filename (optional). Required if a file-like object is provided.
+
    :return: :ref:`Resource` object
 
 .. code-block:: python
@@ -82,7 +90,8 @@ create
    ...     is_company=False,
    ...     address_attributes={'street1': 'foo', 'street2': 'bar', 'city': 'Moscow', 'postcode': '111111', 'country_code': 'RU'},
    ...     custom_fields=[{'id': 1, 'value': 'foo'}, {'id': 2, 'value': 'bar'}],
-   ...     visibility=0
+   ...     visibility=0,
+   ...     avatar={'path': '/absolute/path/to/file.jpg'}
    ... )
    >>> contact
    <redminelib.resources.Contact #1 "Ivan Ivanov">
@@ -120,6 +129,7 @@ new
    >>> contact.address_attributes = {'street1': 'foo', 'street2': 'bar', 'city': 'Moscow', 'postcode': '111111', 'country_code': 'RU'}
    >>> contact.custom_fields = [{'id': 1, 'value': 'foo'}, {'id': 2, 'value': 'bar'}]
    >>> contact.visibility = 0
+   >>> contact.avatar = {'path': '/absolute/path/to/file.jpg'}
    >>> contact.save()
    <redminelib.resources.Contact #1 "Ivan Ivanov">
 
@@ -133,7 +143,7 @@ get
    :module: redminelib.managers.ResourceManager
    :noindex:
 
-   Returns single Contact resource from the CRM plugin by it's id.
+   Returns single Contact resource from the CRM plugin by its id.
 
    :param int resource_id: (required). Id of the contact.
    :param list include:
@@ -145,12 +155,14 @@ get
     - contacts
     - deals
     - issues
+    - projects
+    - tickets (requires Pro Edition and `Helpdesk plugin <https://www.redmineup.com/pages/plugins/helpdesk>`_ >= 4.1.12)
 
    :return: :ref:`Resource` object
 
 .. code-block:: python
 
-   >>> contact = redmine.contact.get(12345, include=['notes', 'contacts', 'deals', 'issues'])
+   >>> contact = redmine.contact.get(12345, include=['notes', 'contacts', 'deals', 'issues', 'projects'])
    >>> contact
    <redminelib.resources.Contact #12345 "Ivan Ivanov">
 
@@ -169,6 +181,27 @@ get
       >>> contact.issues
       <redminelib.resultsets.ResourceSet object with Issue resources>
 
+.. hint::
+
+   Contact resource object provides you with some relations. Relations are the other
+   resource objects wrapped in a :ref:`ResourceSet` which are somehow related to a Contact
+   resource object. The relations provided by the Contact resource object are:
+
+   * invoices (requires Pro Edition and `Invoices plugin <https://www.redmineup.com/pages/plugins/invoices>`_
+     >= 4.1.3)
+   * payments (requires Pro Edition and `Invoices plugin <https://www.redmineup.com/pages/plugins/invoices>`_
+     >= 4.1.3)
+   * expenses (requires Pro Edition and `Invoices plugin <https://www.redmineup.com/pages/plugins/invoices>`_
+     >= 4.1.3)
+   * orders (requires Pro Edition and `Products plugin <https://www.redmineup.com/pages/plugins/products>`_
+     >= 2.1.5)
+
+   .. code-block:: python
+
+      >>> contact = redmine.contact.get(12345)
+      >>> contact.invoices
+      <redminelib.resultsets.ResourceSet object with Invoice resources>
+
 all
 +++
 
@@ -180,11 +213,18 @@ all
 
    :param int limit: (optional). How much resources to return.
    :param int offset: (optional). Starting from what resource to return the other resources.
+   :param list include:
+    .. raw:: html
+
+       (optional). Fetches associated data in one call. Accepted values:
+
+    - projects
+
    :return: :ref:`ResourceSet` object
 
 .. code-block:: python
 
-   >>> contacts = redmine.contact.all(offset=10, limit=100)
+   >>> contacts = redmine.contact.all(offset=10, limit=100, include=['projects'])
    >>> contacts
    <redminelib.resultsets.ResourceSet object with Contact resources>
 
@@ -205,11 +245,18 @@ filter
    :param string tags: (optional). Get contacts with given tags (separated by ``,``).
    :param int limit: (optional). How much resources to return.
    :param int offset: (optional). Starting from what resource to return the other resources.
+   :param list include:
+    .. raw:: html
+
+       (optional). Fetches associated data in one call. Accepted values:
+
+    - projects
+
    :return: :ref:`ResourceSet` object
 
 .. code-block:: python
 
-   >>> contacts = redmine.contact.filter(project_id='vacation', assigned_to_id=123, search='Smith', tags='one,two')
+   >>> contacts = redmine.contact.filter(project_id='vacation', assigned_to_id=123, search='Smith', tags='one,two', include=['projects'])
    >>> contacts
    <redminelib.resultsets.ResourceSet object with Contact resources>
 
@@ -274,6 +321,14 @@ update
     - 1 - public
     - 2 - private
 
+   :param dict avatar:
+    .. raw:: html
+
+       (optional). Avatar to be used for the contact as dict, accepted keys are:
+
+    - path (required). Absolute file path or file-like object that should be uploaded.
+    - filename (optional). Required if a file-like object is provided.
+
    :return: True
 
 .. code-block:: python
@@ -295,7 +350,8 @@ update
    ...     is_company=False,
    ...     address_attributes={'street1': 'foo', 'street2': 'bar', 'city': 'Moscow', 'postcode': '111111', 'country_code': 'RU'},
    ...     custom_fields=[{'id': 1, 'value': 'foo'}, {'id': 2, 'value': 'bar'}],
-   ...     visibility=0
+   ...     visibility=0,
+   ...     avatar={'path': '/absolute/path/to/file.jpg'}
    ... )
    True
 
@@ -330,6 +386,7 @@ save
    >>> contact.address_attributes = {'street1': 'foo', 'street2': 'bar', 'city': 'Moscow', 'postcode': '111111', 'country_code': 'RU'}
    >>> contact.custom_fields = [{'id': 1, 'value': 'foo'}, {'id': 2, 'value': 'bar'}]
    >>> contact.visibility = 0
+   >>> contact.avatar = {'path': '/absolute/path/to/file.jpg'}
    >>> contact.save()
    <redminelib.resources.Contact #12345 "Ivan Ivanov">
 
@@ -353,7 +410,8 @@ save
    ...     is_company=False,
    ...     address_attributes={'street1': 'foo', 'street2': 'bar', 'city': 'Moscow', 'postcode': '111111', 'country_code': 'RU'},
    ...     custom_fields=[{'id': 1, 'value': 'foo'}, {'id': 2, 'value': 'bar'}],
-   ...     visibility = 0
+   ...     visibility=0,
+   ...     avatar={'path': '/absolute/path/to/file.jpg'}
    ... )
    >>> contact
    <redminelib.resources.Contact #12345 "Ivan Ivanov">
@@ -368,7 +426,7 @@ delete
    :module: redminelib.managers.ResourceManager
    :noindex:
 
-   Deletes single Contact resource from the CRM plugin by it's id.
+   Deletes single Contact resource from the CRM plugin by its id.
 
    :param int resource_id: (required). Contact id.
    :return: True

@@ -6,7 +6,7 @@ Supported by Redmine starting from version 1.0
 Manager
 -------
 
-All operations on the Project resource are provided by it's manager. To get access to
+All operations on the Project resource are provided by its manager. To get access to
 it you have to call ``redmine.project`` where ``redmine`` is a configured redmine object.
 See the :doc:`../configuration` about how to configure redmine object.
 
@@ -32,7 +32,7 @@ create
    :param list tracker_ids: (optional). The ids of trackers for this project.
    :param list issue_custom_field_ids: (optional). The ids of issue custom fields for this project.
    :param list custom_fields: (optional). Custom fields as [{'id': 1, 'value': 'foo'}].
-   :param list enabled_module_names: (optional). The names of enabled modules for this project (Redmine >= 2.6.0 only).
+   :param list enabled_module_names: (optional). The names of enabled modules for this project (requires Redmine >= 2.6.0).
    :return: :ref:`Resource` object
 
 .. code-block:: python
@@ -93,7 +93,7 @@ get
    :module: redminelib.managers.ResourceManager
    :noindex:
 
-   Returns single Project resource from Redmine by it's id or identifier.
+   Returns single Project resource from Redmine by its id or identifier.
 
    :param resource_id: (required). Project id or identifier.
    :type resource_id: int or string
@@ -104,14 +104,15 @@ get
 
     - trackers
     - issue_categories
-    - enabled_modules (Redmine >= 2.6.0 only)
-    - time_entry_activities (Redmine >= 3.4.0 only)
+    - enabled_modules (requires Redmine >= 2.6.0)
+    - time_entry_activities (requires Redmine >= 3.4.0)
+    - issue_custom_fields (requires Redmine >= 4.2.0)
 
    :return: :ref:`Resource` object
 
 .. code-block:: python
 
-   >>> project = redmine.project.get('vacation', include=['trackers', 'issue_categories', 'enabled_modules', 'time_entry_activities'])
+   >>> project = redmine.project.get('vacation', include=['trackers', 'issue_categories', 'enabled_modules', 'time_entry_activities', 'issue_custom_fields'])
    >>> project
    <redminelib.resources.Project #123 "Vacation">
 
@@ -148,6 +149,14 @@ get
    * contacts (requires Pro Edition and `CRM plugin <https://www.redmineup.com/pages/plugins/crm>`_)
    * deal_categories (requires Pro Edition and `CRM plugin <https://www.redmineup.com/pages/plugins/crm>`_
      >= 3.3.0)
+   * invoices (requires Pro Edition and `Invoices plugin <https://www.redmineup.com/pages/plugins/invoices>`_
+     >= 4.1.3)
+   * expenses (requires Pro Edition and `Invoices plugin <https://www.redmineup.com/pages/plugins/invoices>`_
+     >= 4.1.3)
+   * products (requires Pro Edition and `Products plugin <https://www.redmineup.com/pages/plugins/products>`_
+     >= 2.1.5)
+   * orders (requires Pro Edition and `Products plugin <https://www.redmineup.com/pages/plugins/products>`_
+     >= 2.1.5)
 
    .. code-block:: python
 
@@ -212,7 +221,7 @@ update
    :param list tracker_ids: (optional). The ids of trackers for this project.
    :param list issue_custom_field_ids: (optional). The ids of issue custom fields for this project.
    :param list custom_fields: (optional). Custom fields as [{'id': 1, 'value': 'foo'}].
-   :param list enabled_module_names: (optional). The names of enabled modules for this project (Redmine >= 2.6.0 only).
+   :param list enabled_module_names: (optional). The names of enabled modules for this project (requires Redmine >= 2.6.0).
    :return: True
 
 .. code-block:: python
@@ -289,7 +298,7 @@ delete
    :module: redminelib.managers.ResourceManager
    :noindex:
 
-   Deletes single Project resource from Redmine by it's id or identifier.
+   Deletes single Project resource from Redmine by its id or identifier.
 
    :param resource_id: (required). Project id or identifier.
    :type resource_id: int or string
@@ -312,6 +321,125 @@ delete
 
    >>> project = redmine.project.get(1)
    >>> project.delete()
+   True
+
+Additional methods
+------------------
+
+.. versionadded:: 2.4.0
+
+close
++++++
+
+.. py:method:: close(resource_id)
+   :module: redminelib.managers.ProjectManager
+   :noindex:
+
+   Closes single Project Redmine resource by its id or identifier.
+
+   :param resource_id: (required). Project id or identifier.
+   :type resource_id: int or string
+   :return: True
+
+.. code-block:: python
+
+   >>> redmine.project.close(1)
+   True
+
+.. py:method:: close()
+   :module: redminelib.resources.Project
+   :noindex:
+
+   Closes current Project Redmine resource object.
+
+   :return: True
+
+.. code-block:: python
+
+   >>> project = redmine.project.get(1)
+   >>> project.close()
+   True
+
+reopen
+++++++
+
+.. py:method:: reopen(resource_id)
+   :module: redminelib.managers.ProjectManager
+   :noindex:
+
+   Reopens previously closed single Project Redmine resource by its id or identifier.
+
+   :param resource_id: (required). Project id or identifier.
+   :type resource_id: int or string
+   :return: True
+
+.. code-block:: python
+
+   >>> redmine.project.reopen(1)
+   True
+
+.. py:method:: reopen()
+   :module: redminelib.resources.Project
+   :noindex:
+
+   Reopens previously closed current Project Redmine resource object.
+
+   :return: True
+
+.. code-block:: python
+
+   >>> project = redmine.project.get(1)
+   >>> project.reopen()
+   True
+
+archive
++++++++
+
+.. py:method:: archive(resource_id)
+   :module: redminelib.managers.ProjectManager
+   :noindex:
+
+   Archives single Project Redmine resource by its id or identifier.
+
+   :param resource_id: (required). Project id or identifier.
+   :type resource_id: int or string
+   :return: True
+
+.. code-block:: python
+
+   >>> redmine.project.archive(1)
+   True
+
+.. py:method:: archive()
+   :module: redminelib.resources.Project
+   :noindex:
+
+   Archives current Project Redmine resource object.
+
+   :return: True
+
+.. code-block:: python
+
+   >>> project = redmine.project.get(1)
+   >>> project.archive()
+   True
+
+unarchive
++++++++++
+
+.. py:method:: unarchive(resource_id)
+   :module: redminelib.managers.ProjectManager
+   :noindex:
+
+   Unarchives single Project Redmine resource by its id or identifier.
+
+   :param resource_id: (required). Project id or identifier.
+   :type resource_id: int or string
+   :return: True
+
+.. code-block:: python
+
+   >>> redmine.project.unarchive(1)
    True
 
 Export

@@ -1,4 +1,3 @@
-coverage
-nose
-mock
+pytest
+pytest-cov
 requests

@@ -6,12 +6,10 @@ import operator
 import functools
 import itertools
 
-from distutils.version import LooseVersion
-
 from . import lookups, exceptions
 
 
-class BaseResourceSet(object):
+class BaseResourceSet:
     """
     Defines basic functionality for a ResourceSet object.
     """
@@ -67,16 +65,16 @@ class BaseResourceSet(object):
             if columns == 'all':
                 columns = ['all', 'all_inline'] + self.manager.resource_class.extra_export_columns
 
-                if self.manager.redmine.ver is not None and LooseVersion(str(self.manager.redmine.ver)) < '3.4.0':
+                if self.manager.redmine.ver is not None and self.manager.redmine.ver < (3, 4, 0):
                     params.update(dict.fromkeys(self.manager.resource_class.extra_export_columns, 1), columns='all')
             elif 'all_gui' in columns:
                 if columns == 'all_gui':
                     columns = ['all', 'all_inline']
 
-                    if self.manager.redmine.ver is not None and LooseVersion(str(self.manager.redmine.ver)) < '3.4.0':
+                    if self.manager.redmine.ver is not None and self.manager.redmine.ver < (3, 4, 0):
                         params['columns'] = 'all'
                 else:
-                    if self.manager.redmine.ver is not None and LooseVersion(str(self.manager.redmine.ver)) < '3.4.0':
+                    if self.manager.redmine.ver is not None and self.manager.redmine.ver < (3, 4, 0):
                         params.update(dict.fromkeys(columns, 1), columns='all')
 
                     columns = list(columns) + ['all', 'all_inline']
@@ -170,8 +168,10 @@ class BaseResourceSet(object):
         """
         Official representation of a ResourceSet object.
         """
-        return '<{0}.{1} object with {2} resources>'.format(
-            self.__class__.__module__, self.__class__.__name__, self.manager.resource_class.__name__)
+        return (
+            f'<{self.__class__.__module__}.{self.__class__.__name__} object '
+            f'with {self.manager.resource_class.__name__} resources>'
+        )
 
 
 class ResourceSet(BaseResourceSet):
@@ -186,7 +186,7 @@ class ResourceSet(BaseResourceSet):
         :type resource_id: int or string
         :param none default: (optional). What to return if Resource wasn't found.
         """
-        for resource in super(ResourceSet, self).__iter__():
+        for resource in super().__iter__():
             if resource_id == resource[self.manager.resource_class.internal_id_key]:
                 return self.manager.to_resource(resource)
 
@@ -223,7 +223,7 @@ class ResourceSet(BaseResourceSet):
 
         resources = []
 
-        for resource in super(ResourceSet, self).__iter__():
+        for resource in super().__iter__():
             for r in reducers:
                 try:
                     if not r['lookup'](functools.reduce(operator.getitem, r['fields'], resource), r['value']):
@@ -271,10 +271,10 @@ class ResourceSet(BaseResourceSet):
         :type fields: list or tuple
         """
         if fields:
-            for resource in super(ResourceSet, self).__iter__():
+            for resource in super().__iter__():
                 yield {field: resource[field] for field in fields if field in resource}
         else:
-            for resource in super(ResourceSet, self).__iter__():
+            for resource in super().__iter__():
                 yield resource
 
     def values_list(self, *fields, **kwargs):
@@ -289,17 +289,17 @@ class ResourceSet(BaseResourceSet):
 
         if fields:
             if flat and len(fields) == 1:
-                for resource in super(ResourceSet, self).__iter__():
+                for resource in super().__iter__():
                     yield resource.get(fields[0])
             else:
-                for resource in super(ResourceSet, self).__iter__():
+                for resource in super().__iter__():
                     yield tuple(resource[field] for field in fields if field in resource)
         else:
-            for resource in super(ResourceSet, self).__iter__():
+            for resource in super().__iter__():
                 yield tuple(resource.values())
 
     def __iter__(self):
         """
         Returns requested resources in a lazy fashion.
         """
-        return (self.manager.to_resource(resource) for resource in super(ResourceSet, self).__iter__())
+        return (self.manager.to_resource(resource) for resource in super().__iter__())
